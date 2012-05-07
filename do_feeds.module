@@ -1,0 +1,67 @@
+<?php
+/**
+ * Implements hook_init().
+ */
+function do_feeds_init() {
+	global $user;
+	$index = 0;
+	$page = 1;
+	$test_array = array();
+
+//	dsm($user);
+//	$abs = file_get_contents('http://drupal.org/user/1766712/track/code');
+////	dsm($abs);
+	$html = file_get_html('http://drupal.org/user/1766712/track/code?page=0');
+	echo "This is it!";
+	foreach ($html->find('div.item-list ul.pager li a') as $element){
+//		echo $element->title;
+//	  if($element->title == 'Go to next page'){
+//	  	echo "Next page present";
+//	  }
+//	  else 
+//	    echo "Next page not present";
+	}
+	
+	foreach($html->find('li.views-row') as $element) {
+//       echo $element. '<br>';
+//		echo "Project name: " . $element->find('div.views-field-nothing div.commit-global h3 a',0)->innertext . "<br>";
+//		echo "Project link: " . $element->find('div.views-field-nothing div.commit-global h3 a',0)->href . "<br>";
+		
+		$test_array[$index]['project_name'] = $element->find('div.views-field-nothing div.commit-global h3 a',0)->innertext;
+		$test_array[$index]['project_link'] = 'http://drupal.org' . $element->find('div.views-field-nothing div.commit-global h3 a',0)->href;
+//		echo "Date: " . $element->find('div.views-field-nothing div.commit-global h3 a',1)->innertext . "<br>";
+		$test_array[$index]['commit_date'] = $element->find('div.views-field-nothing div.commit-global h3 a',1)->innertext;
+	  foreach ($element->find('div.views-field-nothing div.commit-global div.commit-info a') as $temp){
+//      echo "Commit: " . $temp->innertext . "                 Commit href: " . $temp->href. '<br>';	
+      $test_array[$index]['commit'] = $temp->innertext;
+      $test_array[$index]['commit_href'] = $temp->href;
+    }
+  	foreach ($element->find('div.views-field-nothing-1 span.field-content pre') as $temp){
+//      echo "Commit info: " . $temp->innertext . '<br>';
+      $test_array[$index]['commit_info'] = $temp->innertext;	
+    }
+	  foreach ($element->find('div.views-field-nothing div.commit-global div.attribtution a') as $temp){
+//      echo "User: " . $temp->innertext. '|User link:' . $temp->href .  '<br>';	
+      $test_array[$index]['user'] = $temp->innertext;
+      $test_array[$index]['user_href'] = 'http://drupal.org' . $temp->href;
+    }   
+    $index++;
+//    echo "<br>";
+	}
+////	dsm($test_array);
+	foreach ($test_array as $element){
+		dsm($element['project_name']);
+	}
+////	foreach($html->find('li.views-row div.commit-global h3 a:nth-child(1)') as $element) {
+////       echo $element. '<br>';
+////	}
+////  foreach($html->find('li.views-row div.commit-global h3 a:nth-child(2)') as $element) {
+////       echo $element. '<br>';
+////	}
+////  foreach($html->find('li.views-row div.commit-global div.commit-info a') as $element) {
+////       echo $element. '<br>';
+////	}
+////  foreach($html->find('li.views-row div.commit-global div.attribtution a') as $element) {
+////       echo $element. '<br>';
+////	}
+}
