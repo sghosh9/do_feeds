@@ -1,67 +1,108 @@
 <?php
 /**
- * Implements hook_init().
+ * Implements hook_cron().
  */
-function do_feeds_init() {
-	global $user;
-	$index = 0;
-	$page = 1;
-	$test_array = array();
-
-//	dsm($user);
-//	$abs = file_get_contents('http://drupal.org/user/1766712/track/code');
-////	dsm($abs);
-	$html = file_get_html('http://drupal.org/user/1766712/track/code?page=0');
-	echo "This is it!";
-	foreach ($html->find('div.item-list ul.pager li a') as $element){
-//		echo $element->title;
-//	  if($element->title == 'Go to next page'){
-//	  	echo "Next page present";
-//	  }
-//	  else 
-//	    echo "Next page not present";
-	}
+function do_feeds_cron() {
+//function do_feeds_init() {
+	$page = 0;
+	$next_page_present = TRUE;
 	
-	foreach($html->find('li.views-row') as $element) {
-//       echo $element. '<br>';
-//		echo "Project name: " . $element->find('div.views-field-nothing div.commit-global h3 a',0)->innertext . "<br>";
-//		echo "Project link: " . $element->find('div.views-field-nothing div.commit-global h3 a',0)->href . "<br>";
+	$get_last_timestamp = db_select('do_feeds', 'df')
+		->fields('df', array('commit_timestamp'))
+		->execute()
+		->fetchField();
 		
-		$test_array[$index]['project_name'] = $element->find('div.views-field-nothing div.commit-global h3 a',0)->innertext;
-		$test_array[$index]['project_link'] = 'http://drupal.org' . $element->find('div.views-field-nothing div.commit-global h3 a',0)->href;
-//		echo "Date: " . $element->find('div.views-field-nothing div.commit-global h3 a',1)->innertext . "<br>";
-		$test_array[$index]['commit_date'] = $element->find('div.views-field-nothing div.commit-global h3 a',1)->innertext;
-	  foreach ($element->find('div.views-field-nothing div.commit-global div.commit-info a') as $temp){
-//      echo "Commit: " . $temp->innertext . "                 Commit href: " . $temp->href. '<br>';	
-      $test_array[$index]['commit'] = $temp->innertext;
-      $test_array[$index]['commit_href'] = $temp->href;
-    }
-  	foreach ($element->find('div.views-field-nothing-1 span.field-content pre') as $temp){
-//      echo "Commit info: " . $temp->innertext . '<br>';
-      $test_array[$index]['commit_info'] = $temp->innertext;	
-    }
-	  foreach ($element->find('div.views-field-nothing div.commit-global div.attribtution a') as $temp){
-//      echo "User: " . $temp->innertext. '|User link:' . $temp->href .  '<br>';	
-      $test_array[$index]['user'] = $temp->innertext;
-      $test_array[$index]['user_href'] = 'http://drupal.org' . $temp->href;
-    }   
-    $index++;
-//    echo "<br>";
+//		dsm($get_last_timestamp);
+	
+	while ($next_page_present){
+		$html = file_get_html('http://drupal.org/user/1766712/track/code?page='.$page++);
+		echo "Running page = ".$page."\n";
+		retreive_commit_data($html,$get_last_timestamp);
+		$next_page_present = $html->find('div.item-list ul.pager li.pager-next');
 	}
-////	dsm($test_array);
-	foreach ($test_array as $element){
-		dsm($element['project_name']);
-	}
-////	foreach($html->find('li.views-row div.commit-global h3 a:nth-child(1)') as $element) {
-////       echo $element. '<br>';
-////	}
-////  foreach($html->find('li.views-row div.commit-global h3 a:nth-child(2)') as $element) {
-////       echo $element. '<br>';
-////	}
-////  foreach($html->find('li.views-row div.commit-global div.commit-info a') as $element) {
-////       echo $element. '<br>';
-////	}
-////  foreach($html->find('li.views-row div.commit-global div.attribtution a') as $element) {
-////       echo $element. '<br>';
-////	}
 }
+
+function retreive_commit_data($html,$get_last_timestamp){
+	$index = 0;
+	$test_array = array();
+		
+	foreach($html->find('li.views-row') as $element) {
+	//       echo $element. '<br>';
+	//		echo "Project name: " . $element->find('div.views-field-nothing div.commit-global h3 a',0)->innertext . "<br>";
+	//		echo "Project link: " . $element->find('div.views-field-nothing div.commit-global h3 a',0)->href . "<br>";
+			
+			$test_array[$index]['project_name'] = $element->find('div.views-field-nothing div.commit-global h3 a',0)->innertext;
+			$test_array[$index]['project_link'] = 'http://drupal.org' . $element->find('div.views-field-nothing div.commit-global h3 a',0)->href;
+	//		echo "Date: " . $element->find('div.views-field-nothing div.commit-global h3 a',1)->innertext . "<br>";
+			$test_array[$index]['commit_date'] = $element->find('div.views-field-nothing div.commit-global h3 a',1)->innertext;
+		  foreach ($element->find('div.views-field-nothing div.commit-global div.commit-info a') as $temp){
+	//      echo "Commit: " . $temp->innertext . "                 Commit href: " . $temp->href. '<br>';	
+	      $test_array[$index]['commit'] = $temp->innertext;
+	      $test_array[$index]['commit_link'] = $temp->href;
+	    }
+	  	foreach ($element->find('div.views-field-nothing-1 span.field-content pre') as $temp){
+	//      echo "Commit info: " . $temp->innertext . '<br>';
+	      $test_array[$index]['commit_info'] = $temp->innertext;	
+	    }
+		  foreach ($element->find('div.views-field-nothing div.commit-global div.attribtution a') as $temp){
+	//      echo "User: " . $temp->innertext. '|User link:' . $temp->href .  '<br>';	
+	      $test_array[$index]['user'] = $temp->innertext;
+	      $test_array[$index]['user_href'] = 'http://drupal.org' . $temp->href;
+	    }   
+	    $index++;
+	//    echo "<br>";
+	    
+}
+	$count = 0;
+//	dsm($test_array);
+	foreach ($test_array as $element){
+//		dsm($element['commit_date']);
+		list($month,$day,$year,$hour,$minute) = preg_split('/[\s,:]+/', $element['commit_date']);
+//		dsm($month);
+		$nmonth = date('m',strtotime($month));
+//		dsm($nmonth);
+		$timestamp=mktime($hour, $minute,0, $nmonth, $day, $year);
+//		dsm($timestamp);
+//		$count++;	
+
+		
+		
+		if($timestamp != NULL && $timestamp <= $get_last_timestamp)
+		  return;
+		
+		$insert_commit = db_insert('do_feeds')
+  ->fields(array(
+    'project_name' => $element['project_name'],
+    'project_link' => $element['project_link'],
+    'commit' => $element['commit'],
+    'commit_link' => $element['commit_link'],
+    'commit_info' => $element['commit_info'],
+    'user' => $element['user'],
+		'commit_timestamp' => $timestamp,
+  ))
+  ->execute();
+	}
+//	echo $count;
+}
+
+//function do_feeds_node_info() {
+//  return array(
+//    'user_commit_history' => array(
+//    'name' => t('User Commit History'),
+//    'base' => 'user_commit_history',
+//    'has_title' => FALSE
+//    ),
+//  );
+//}
+//
+//function user_commit_history_form($node,$form_state) {
+////  dsm($form);
+////	$form['custom_test_field'] = array(
+////    '#type' => 'textfield',
+////    '#title' => t('Custom test field'),
+////    '#description' => t('You can type anything you like.'),
+////  );
+//  return node_content_form($node, $form_state);
+//}
+
+
