@@ -1,15 +1,11 @@
 <?php
 /**
- * Views for the user commit.
- */
-
-
-/**
+ * @files
  * Implements hook_views_default_views().
  */
 function do_feeds_views_default_views() {
   $views = array();
-  
+
   $view = new view;
   $view->name = 'user_commit_log';
   $view->description = '';
@@ -19,7 +15,7 @@ function do_feeds_views_default_views() {
   $view->core = 7;
   $view->api_version = '3.0';
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
-  
+
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
   $handler->display->display_options['title'] = 'User commit log';
@@ -190,13 +186,12 @@ function do_feeds_views_default_views() {
   $handler->display->display_options['filters']['type']['value'] = array(
     'user_commit_history' => 'user_commit_history',
   );
-  
+
   /* Display: Block */
   $handler = $view->new_display('block', 'Block', 'block');
   $handler->display->display_options['block_caching'] = '-1';
-  
+
   $views[$view->name] = $view;
-  
+
   return $views;
-    
 }
