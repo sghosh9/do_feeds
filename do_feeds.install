@@ -41,8 +41,49 @@ function do_feeds_install () {
   //Finally saving the new content type.
   $user_commit_history = node_type_set_defaults($user_commit_history);
   node_type_save($user_commit_history);
+  
+  //Create a new field for the user profile which contains the users DO profile link. 
+  if(!field_info_field('do_profile_link')) {
+    $user_field = array(
+      'field_name' => 'do_profile_link',
+      'label' => t('drupal.org Link'),
+      'type' => 'link_field',
+      'cardinality' => 1,
+      'settings' => array(
+          'required' => TRUE,
+      ),
+      'entity_types' => array('user'),
+      'locked' => FALSE,
+      'translatable' => TRUE,
+      'module' => 'link',
+      'active' => TRUE,
+    );
+    field_create_field($user_field);
+    //Create the instances for DO profile link field to attach it to the user profile.
+    $instance = array(
+      'field_name' => 'do_profile_link',
+      'entity_type' => 'user',
+      'label' => t('drupal.org Link'),
+      'bundle' => 'user',
+      'required' => true,
+      'settings' => array(
+        'attributes' => array(
+          'target' => '_blank',
+        ),
+      ),
+      'display' => array(
+        'default' => array(
+          'label' => 'inline',
+          'weight' => 0,
+        ),
+      ),
+    );
+    field_create_instance($instance);
+  }
 }
-
+/**
+ *This function is called to create the fields for the custom content type User Commit History.
+ */
 function _do_feeds_installed_fields(){
 	$t = get_t();
 	return array(
@@ -70,6 +111,18 @@ function _do_feeds_installed_fields(){
       'module' => 'link',
       'active' => TRUE,
     ),
+    'do_commit_date' => array(
+      'field_name' => 'do_commit_date',
+      'label' => t('Commit Date'),
+      'type' => 'text',
+      'cardinality' => 1,
+      'settings' => array(
+        'max_length' => 255, // default
+      ),
+      'entity_types' => array('node'),
+      'locked' => FALSE,
+      'translatable' => TRUE,
+    ),
     'do_commit_info' => array(
       'field_name' => 'do_commit_info',
       'label' => t('Commit Message'),
@@ -94,6 +147,10 @@ function _do_feeds_installed_fields(){
     ),
   );
 }
+/**
+ *This function is called to create the instances of fields to attach them to the 
+ *custom content type User Commit History. 
+ */
 function _do_feeds_installed_instances() {
 	$t = get_t();
 	return array(
@@ -127,6 +184,17 @@ function _do_feeds_installed_instances() {
         ),
       ),
     ),
+    'do_commit_date' => array(
+      'field_name' => 'do_commit_date',
+      'label' => t('Commit Date'),
+      'default_value' => array(),
+      'display' => array(
+        'default' => array(
+          'label' => 'hidden',
+          'weight' => 4,
+        ),
+      ),
+    ),
     'do_commit_info' => array(
       'field_name' => 'do_commit_info',
       'label' => t('Commit Message'),
@@ -147,7 +215,7 @@ function _do_feeds_installed_instances() {
           'label' => 'hidden',
           'type' => 'text_default',
           'settings' => array(),
-          'weight' => 4,
+          'weight' => 5,
         ),
       ),
     ),
@@ -162,17 +230,21 @@ function _do_feeds_installed_instances() {
       'display' => array(
         'default' => array(
           'label' => 'hidden',
-          'weight' => 0,
+          'weight' => 6,
         ),
       ),
     ),
 	);
 }
 
-
+/**
+ *@files
+ *Implements hook_uninstall()
+ */
 function do_feeds_uninstall() {
   // machine name of the content type
   $name = 'user_commit_history';
+  $user_field = 'do_profile_link';
  
   // gather all job nodes created
   $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
@@ -206,17 +278,22 @@ function do_feeds_uninstall() {
  
   // delete our content type
   node_type_delete($name);
+  
+  field_delete_field($user_field);
+  $instances = field_info_instances('user', $user_field);
+  foreach ($instances as $instance_name => $instance) {
+    field_delete_instance($instance);
+  }
  
   // purge all field infromation
   field_purge_batch(1000);
 }
 
  
- /**
+/**
  *@files
  *Implements hook_schema()
- */
- 
+ */ 
 function do_feeds_schema () {		
 	$schema['do_feeds'] = array (
 		'description' => 'Stores user commit information',
@@ -263,7 +340,6 @@ function do_feeds_schema () {
         'description' => 'Contains the user name',
 			),						
 		),
-	);
-	
+	);	
 	return $schema;
 }
