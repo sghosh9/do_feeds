@@ -1,25 +1,17 @@
 <?php
-/**
- * @files
+/**@files
  * Implements hook_install().
  */
 function do_feeds_install() {
-  //Create a new content type.
+  $t = get_t();
+  // Create a new content type.
   $user_commit_history = array(
     'type' => 'user_commit_history',
-    'name' => st('User Commit History'),
+    'name' => t('User Commit History'),
     'base' => 'node_content',
     'has_title' => FALSE,
-//    'node_preview' => 0,
-//    'node_options' => array(
-//      'status' => TRUE,
-//    ),
-//    'node_submitted' => FALSE,
-//    'comment' => array(
-//      'status' => 1,
-//    ),
   );
-  //Set settings for this new content type.
+  // Set settings for this new content type.
   variable_set('additional_settings__active_tab_user_commit_history', 'edit-menu');
   variable_set('comment_user_commit_history', '1');
   variable_set('menu_options_user_commit_history', array(''));
@@ -27,22 +19,25 @@ function do_feeds_install() {
   variable_set('node_preview_user_commit_history', 0);
   variable_set('node_submitted_user_commit_history', 0);
 
-  //Create new fields for this content type and user profile.
+  // Create new fields for this content type and user profile.
   foreach (_do_feeds_installed_fields() as $field) {
     field_create_field($field);
   }
 
-  //Create all the instances for our fields to attach them to the new content type.
+  /**
+   * Create all the instances for our fields
+   * to attach them to the new content type.
+   */
   foreach (_do_feeds_installed_instances() as $instance) {
     $instance['entity_type'] = 'node';
     $instance['bundle'] = 'user_commit_history';
     field_create_instance($instance);
   }
-  //Finally saving the new content type.
+  // Finally saving the new content type.
   $user_commit_history = node_type_set_defaults($user_commit_history);
   node_type_save($user_commit_history);
 
-  //Create all the instances for our fields to attach them to the user profile.
+  // Create all the instances for our fields to attach them to the user profile.
   foreach (_do_feeds_extra_profile_instances() as $instance) {
     $instance['entity_type'] = 'user';
     $instance['bundle'] = 'user';
@@ -50,7 +45,8 @@ function do_feeds_install() {
   }
 }
 /**
- * This function is called to create the fields for the custom content type User Commit History.
+ * This function is called to create the fields
+ * for the custom content type User Commit History.
  */
 function _do_feeds_installed_fields() {
   $t = get_t();

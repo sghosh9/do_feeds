@@ -43,14 +43,14 @@ function do_feeds_cron() {
       dsm("User DO link" . $user_do_commit_link);
       $html = file_get_html($user_do_commit_link);
       dsm("Running page = " . $page . "\n");
-      $fetch_more_commits = retreive_commit_data($html, $get_last_timestamp, $username, $user_do_link, $user_timezone);
+      $fetch_more_commits = do_feeds_retreive_commit_data($html, $get_last_timestamp, $username, $user_do_link, $user_timezone);
       $next_page_present = $html->find('div.item-list ul.pager li.pager-next');
     }
 //  	echo "<br><br>";
   }
 }
 
-function retreive_commit_data($html, $get_last_timestamp = NULL, $username, $user_do_link, $user_timezone) {
+function do_feeds_retreive_commit_data($html, $get_last_timestamp = NULL, $username, $user_do_link, $user_timezone) {
   $index = 0;
   $test_array = array();
 
